@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.urls import reverse
 
 from polls.models import Question
+from polls.models import Choice
 
 def create_question(question_text, days):
     """
@@ -25,6 +26,13 @@ def create_question(question_text, days):
     return Question.objects.create(question_text=question_text, pub_date=time)
 
 class QuestionIndexViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # Очищаем тестовую базу данных
+        # почему-то тестовая база берёт значения из основной
+        Question.objects.all().delete()
+        Choice.objects.all().delete()
+
     def test_no_questions(self):
         """
         If no questions exist, an appropriate message is displayed.
