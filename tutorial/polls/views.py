@@ -5,6 +5,7 @@ from django.http import HttpResponseRedirect
 from django.http import Http404
 from django.urls import reverse
 from django.views import generic
+from django.utils import timezone
 
 from .models import Question
 from .models import Choice
@@ -16,13 +17,19 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         """Вернёт последние 5 публикованных вопросов"""
-        return Question.objects.order_by('-pub_date')[:5]
+        return Question.objects.filter(pub_date__lte=timezone.now()).order_by('-pub_date')[:5]
 
 
 class DetailView(generic.DetailView):
     model = Question
     template_name = 'polls/detail.html'
     context_object_name = 'q'
+
+    def get_queryset(self):
+        """
+        Убираем вопросы, которые еще не существуют на данный момент
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
 
 
 class ResultsView(generic.DetailView):
@@ -52,8 +59,8 @@ def vote(request, question_id):
     except (KeyError, Choice.DoesNotExist):
         # Показываем форму вопроса занаво с сообщение об ошибке
         context = {
-            'question': question,
-            'error_message': "You didn't select a choice"
+            'q': question,
+            'error_message': "You didn't select a choice",
         }
         return render(request, "polls/detail.html", context)
     else:
